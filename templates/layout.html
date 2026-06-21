@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}DormMate{% endblock %}</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="app-body">
+
+  <header class="nav">
+    <div class="nav__inner">
+      <a href="{{ url_for('index') }}" class="nav__brand">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="DormMate logo" class="nav__logo">
+      </a>
+
+      <nav class="nav__links">
+        {% if current_user %}
+          <span class="nav__user">Hi, {{ current_user.name }}</span>
+          <a href="{{ url_for('notifications.feed') }}" class="nav__notif-btn" title="Notifications">
+            🔔
+            {% if notif_unread_count > 0 %}
+              <span class="notif-badge">{{ notif_unread_count }}</span>
+            {% endif %}
+          </a>
+          <a href="{{ url_for('auth.logout') }}">Log out</a>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}">Log in</a>
+          <a href="{{ url_for('auth.signup') }}" class="btn btn--primary nav__cta">Get started</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main class="app-main">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-stack">
+          {% for category, message in messages %}
+            <div class="flash flash--{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+</body>
+</html>

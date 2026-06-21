@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% block title %}Sign up — DormMate{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="form-card reveal is-visible">
+    <p class="eyebrow">Get started</p>
+    <h1>Create your account</h1>
+    <p class="form-card__sub">You'll set up or join a household next.</p>
+
+    <form method="post" class="form" novalidate>
+      <div class="form-group">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" value="{{ name or '' }}" required autofocus>
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" value="{{ email or '' }}" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required minlength="6">
+      </div>
+      <button type="submit" class="btn btn--primary btn--lg form__submit">Create account</button>
+    </form>
+
+    <p class="form-card__footer">Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+  </div>
+</div>
+{% endblock %}

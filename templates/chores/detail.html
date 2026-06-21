@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+{% block title %}{{ chore.title }} — {{ household.name }}{% endblock %}
+{% block content %}
+<div class="page-shell page-shell--narrow">
+
+  <div class="page-head reveal is-visible">
+    <a href="{{ url_for('chores.list_chores', household_id=household.id) }}" class="notif-back-link">← Chores</a>
+    <p class="eyebrow">{{ household.name }}</p>
+    <h1>{{ chore.title }}</h1>
+    {% if chore.description %}
+    <p class="page-head__sub">{{ chore.description }}</p>
+    {% endif %}
+  </div>
+
+  <div class="card reveal is-visible" style="padding:24px;margin-bottom:16px;">
+    <div style="display:flex;gap:28px;flex-wrap:wrap;align-items:center;margin-bottom:20px;">
+      <div>
+        <p class="panel__title" style="margin-bottom:4px;">NEXT DUE</p>
+        <p style="font-family:var(--font-display);font-size:22px;font-weight:700;margin:0;color:{% if chore.is_overdue %}var(--coral){% elif chore.is_due_today %}var(--blue){% else %}var(--ink){% endif %};">
+          {% if chore.is_overdue %}Overdue by {{ chore.days_until_due|abs }} day{{ 's' if chore.days_until_due|abs != 1 }}
+          {% elif chore.is_due_today %}Today
+          {% else %}{{ chore.next_due_date.strftime('%b %d') }}{% endif %}
+        </p>
+      </div>
+      <div>
+        <p class="panel__title" style="margin-bottom:4px;">FREQUENCY</p>
+        <p style="font-weight:600;margin:0;">{{ chore.get_frequency_label() }}</p>
+      </div>
+      <div>
+        <p class="panel__title" style="margin-bottom:4px;">ASSIGNED TO</p>
+        <p style="font-weight:600;margin:0;">
+          {% if chore.rotation_mode %}🔄 Rotation (now: {{ current_assignee.name if current_assignee else '—' }})
+          {% elif current_assignee %}{{ current_assignee.name }}
+          {% else %}Unassigned{% endif %}
+        </p>
+      </div>
+      {% if chore.last_completed_at %}
+      <div>
+        <p class="panel__title" style="margin-bottom:4px;">LAST DONE</p>
+        <p style="font-weight:600;margin:0;">{{ chore.last_completed_at.strftime('%b %d, %Y') }}</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <form method="POST" action="{{ url_for('chores.complete_chore', household_id=household.id, chore_id=chore.id) }}"
+          style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+      <div class="form-group" style="flex:1;min-width:180px;margin-bottom:0;">
+        <label class="form-label">Note <span style="font-weight:400;color:rgba(11,27,58,0.4);">(optional)</span></label>
+        <input class="form-input" type="text" name="note" placeholder="e.g. Deep cleaned">
+      </div>
+      <button type="submit" class="btn btn--primary">✓ Mark done</button>
+    </form>
+  </div>
+
+  {% if chore.completions %}
+  <div class="card reveal is-visible" style="padding:20px 24px;">
+    <p class="panel__title" style="margin-bottom:12px;">COMPLETION HISTORY</p>
+    {% for c in chore.completions[:10] %}
+    <div class="member-row" style="padding:10px 0;">
+      <div>
+        <span style="font-weight:600;">{{ c.user.name }}</span>
+        {% if c.note %}<span style="font-size:13px;color:rgba(11,27,58,0.55);margin-left:8px;">— {{ c.note }}</span>{% endif %}
+      </div>
+      <span style="font-size:13px;color:rgba(11,27,58,0.5);">{{ c.completed_at.strftime('%b %d, %Y') }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+    <a href="{{ url_for('chores.list_chores', household_id=household.id) }}" class="btn btn--ghost">← All chores</a>
+    <form method="POST" action="{{ url_for('chores.delete_chore', household_id=household.id, chore_id=chore.id) }}"
+          onsubmit="return confirm('Remove this chore?')">
+      <button type="submit" class="btn btn--ghost" style="border-color:var(--coral);color:var(--coral);">Remove chore</button>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

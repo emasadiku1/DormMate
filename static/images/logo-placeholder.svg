@@ -1,0 +1,5 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Nestly logo placeholder">
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="#0259DD"/>
+  <circle cx="49" cy="15" r="6" fill="#FF6648"/>
+  <text x="32" y="43" font-family="Verdana, Geneva, sans-serif" font-weight="700" font-size="30" fill="#FFE1D7" text-anchor="middle">N</text>
+</svg>

@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% block title %}Edit House Rules — {{ household.name }}{% endblock %}
+{% block content %}
+<div class="page-shell page-shell--narrow">
+
+  <div class="page-head reveal is-visible">
+    <a href="{{ url_for('house_rules.view', household_id=household.id) }}" class="notif-back-link">← House Rules</a>
+    <p class="eyebrow">{{ household.name }}</p>
+    <h1>Edit House Rules</h1>
+    <p class="page-head__sub">Write whatever your household needs — quiet hours, guest policy, cleaning expectations.</p>
+  </div>
+
+  <div class="card reveal is-visible" style="padding:28px;">
+    <form method="POST">
+      <div class="form-group">
+        <label class="form-label">Rules</label>
+        <textarea name="content" class="form-input" rows="14"
+          placeholder="e.g.&#10;• Quiet hours after 11pm on weekdays&#10;• Guests must be approved by all roommates&#10;• Kitchen cleaned within 24 hours of cooking&#10;• Shared groceries split equally"
+          style="resize:vertical;font-family:inherit;line-height:1.6;">{{ rule.content if rule else '' }}</textarea>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button type="submit" class="btn btn--primary">Save rules</button>
+        <a href="{{ url_for('house_rules.view', household_id=household.id) }}" class="btn btn--ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

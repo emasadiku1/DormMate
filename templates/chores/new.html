@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+{% block title %}New Chore — {{ household.name }}{% endblock %}
+{% block content %}
+<div class="page-shell page-shell--narrow">
+
+  <div class="page-head reveal is-visible">
+    <a href="{{ url_for('chores.list_chores', household_id=household.id) }}" class="notif-back-link">← Chores</a>
+    <p class="eyebrow">{{ household.name }}</p>
+    <h1>Add a Chore</h1>
+  </div>
+
+  <div class="card reveal is-visible" style="padding:28px;">
+    <form method="POST">
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <input type="text" name="title" class="form-input" placeholder="e.g. Vacuum living room" required autofocus>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description <span style="font-weight:400;color:rgba(11,27,58,0.4);">(optional)</span></label>
+        <input type="text" name="description" class="form-input" placeholder="Any extra details…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Frequency</label>
+        <select name="frequency" class="form-input" id="frequency-select" onchange="toggleCustom(this.value)">
+          {% for value, label in [('daily','Daily'),('weekly','Weekly'),('biweekly','Every 2 weeks'),('monthly','Monthly'),('custom','Custom interval')] %}
+          <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group" id="custom-interval-group" style="display:none;">
+        <label class="form-label">Interval (days)</label>
+        <input type="number" name="custom_interval_days" class="form-input" min="1" value="7">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assignment</label>
+        <select name="rotation_mode" class="form-input" id="rotation-select" onchange="toggleAssign(this.value)">
+          <option value="fixed">Fixed person</option>
+          <option value="rotate">Auto-rotate between members</option>
+        </select>
+      </div>
+      <div class="form-group" id="assignee-group">
+        <label class="form-label">Assign to</label>
+        <select name="assigned_to" class="form-input">
+          {% for member in members %}
+          <option value="{{ member.id }}">{{ member.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button type="submit" class="btn btn--primary">Add chore</button>
+        <a href="{{ url_for('chores.list_chores', household_id=household.id) }}" class="btn btn--ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+</div>
+<script>
+function toggleCustom(val) {
+  document.getElementById('custom-interval-group').style.display = val === 'custom' ? '' : 'none';
+}
+function toggleAssign(val) {
+  document.getElementById('assignee-group').style.display = val === 'fixed' ? '' : 'none';
+}
+</script>
+{% endblock %}

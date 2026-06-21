@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block title %}Create a household — DormMate{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="form-card reveal is-visible">
+    <p class="eyebrow">Start fresh</p>
+    <h1>Name your household</h1>
+    <p class="form-card__sub">You'll get an invite code to share with roommates right after.</p>
+
+    <form method="post" class="form" novalidate>
+      <div class="form-group">
+        <label for="name">Household name</label>
+        <input type="text" id="name" name="name" placeholder="e.g. 14B Maple Street" required autofocus>
+      </div>
+      <button type="submit" class="btn btn--primary btn--lg form__submit">Create household</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

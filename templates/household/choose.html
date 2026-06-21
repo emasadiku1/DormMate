@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block title %}Set up your household — DormMate{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="choose-grid">
+    <a href="{{ url_for('household.create') }}" class="choice-card reveal is-visible">
+      <p class="pillar-card__label">START FRESH</p>
+      <h2>Create a household</h2>
+      <p>Set up a new household and get an invite code for your roommates.</p>
+    </a>
+    <a href="{{ url_for('household.join') }}" class="choice-card reveal is-visible">
+      <p class="pillar-card__label">JOIN ONE</p>
+      <h2>Join with a code</h2>
+      <p>Already have an invite code from a roommate? Use it here.</p>
+    </a>
+  </div>
+</div>
+{% endblock %}

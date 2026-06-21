@@ -1,0 +1,91 @@
+{% extends "layout.html" %}
+{% block title %}Shopping — {{ household.name }}{% endblock %}
+{% block content %}
+<div class="page-shell page-shell--narrow">
+
+  <div class="page-head reveal is-visible">
+    <a href="{{ url_for('household.dashboard', household_id=household.id) }}" class="notif-back-link">← Dashboard</a>
+    <p class="eyebrow">{{ household.name }}</p>
+    <h1>Shopping List</h1>
+    <p class="page-head__sub">{{ pending|length }} item{{ 's' if pending|length != 1 }} to buy</p>
+  </div>
+
+  {# ── Add item form ──────────────────────────────────────────────────────── #}
+  <div class="card reveal is-visible" style="padding:20px 24px;margin-bottom:20px;">
+    <form method="POST" action="{{ url_for('shopping.add_item', household_id=household.id) }}"
+          style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+      <div class="form-group" style="flex:2;min-width:160px;margin-bottom:0;">
+        <label class="form-label">Item</label>
+        <input type="text" name="title" class="form-input" placeholder="e.g. Oat milk" required>
+      </div>
+      <div class="form-group" style="width:80px;margin-bottom:0;">
+        <label class="form-label">Qty</label>
+        <input type="number" name="quantity" class="form-input" value="1" min="1">
+      </div>
+      <div class="form-group" style="flex:2;min-width:140px;margin-bottom:0;">
+        <label class="form-label">Note <span style="font-weight:400;color:rgba(11,27,58,0.4);">(opt)</span></label>
+        <input type="text" name="note" class="form-input" placeholder="Brand, size…">
+      </div>
+      <button type="submit" class="btn btn--primary" style="flex-shrink:0;">Add</button>
+    </form>
+  </div>
+
+  {# ── Pending items ──────────────────────────────────────────────────────── #}
+  {% if pending %}
+  <p class="member-list__heading reveal is-visible" style="margin-bottom:10px;">TO BUY</p>
+  {% for item in pending %}
+  <div class="card reveal is-visible" style="padding:14px 20px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
+    <form method="POST" action="{{ url_for('shopping.mark_purchased', household_id=household.id, item_id=item.id) }}" style="flex-shrink:0;">
+      <button type="submit" style="width:24px;height:24px;border-radius:50%;border:2px solid var(--blue);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Mark purchased"></button>
+    </form>
+    <div style="flex:1;">
+      <span style="font-weight:600;font-size:15px;">{{ item.title }}</span>
+      {% if item.quantity > 1 %}<span style="font-size:13px;color:rgba(11,27,58,0.5);margin-left:6px;">×{{ item.quantity }}</span>{% endif %}
+      {% if item.note %}<span style="font-size:13px;color:rgba(11,27,58,0.5);margin-left:6px;">— {{ item.note }}</span>{% endif %}
+      <p style="font-size:12px;color:rgba(11,27,58,0.4);margin:2px 0 0;">Added by {{ item.adder.name }}</p>
+    </div>
+    <form method="POST" action="{{ url_for('shopping.delete_item', household_id=household.id, item_id=item.id) }}"
+          onsubmit="return confirm('Remove this item?')">
+      <button type="submit" style="background:none;border:none;cursor:pointer;color:rgba(11,27,58,0.3);font-size:18px;line-height:1;" title="Remove">×</button>
+    </form>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="empty-state reveal is-visible">
+    <p>List is empty — go wild 🛒</p>
+  </div>
+  {% endif %}
+
+  {# ── Purchased items ────────────────────────────────────────────────────── #}
+  {% if purchased %}
+  <div style="margin-top:28px;" class="reveal is-visible">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <p class="member-list__heading" style="margin:0;">RECENTLY PURCHASED</p>
+      <form method="POST" action="{{ url_for('shopping.clear_purchased', household_id=household.id) }}"
+            onsubmit="return confirm('Clear all purchased items?')">
+        <button type="submit" class="btn btn--ghost" style="font-size:12px;padding:4px 10px;">Clear all</button>
+      </form>
+    </div>
+    {% for item in purchased %}
+    <div class="card reveal is-visible" style="padding:12px 20px;margin-bottom:6px;display:flex;align-items:center;gap:12px;opacity:0.65;">
+      <form method="POST" action="{{ url_for('shopping.mark_purchased', household_id=household.id, item_id=item.id) }}" style="flex-shrink:0;">
+        <button type="submit" style="width:24px;height:24px;border-radius:50%;border:2px solid #2EC4B6;background:#2EC4B6;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;" title="Unmark">✓</button>
+      </form>
+      <div style="flex:1;">
+        <span style="font-weight:600;font-size:14px;text-decoration:line-through;color:rgba(11,27,58,0.5);">{{ item.title }}</span>
+        {% if item.quantity > 1 %}<span style="font-size:12px;color:rgba(11,27,58,0.4);margin-left:6px;">×{{ item.quantity }}</span>{% endif %}
+        <p style="font-size:12px;color:rgba(11,27,58,0.35);margin:2px 0 0;">
+          Bought by {{ item.buyer.name if item.buyer else '?' }}
+          {% if item.purchased_at %}· {{ item.purchased_at.strftime('%b %d') }}{% endif %}
+        </p>
+      </div>
+      <form method="POST" action="{{ url_for('shopping.delete_item', household_id=household.id, item_id=item.id) }}">
+        <button type="submit" style="background:none;border:none;cursor:pointer;color:rgba(11,27,58,0.25);font-size:18px;line-height:1;">×</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

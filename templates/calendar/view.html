@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+{% block title %}Calendar — {{ household.name }}{% endblock %}
+{% block content %}
+<div class="page-shell">
+
+  <div class="page-head reveal is-visible">
+    <a href="{{ url_for('household.dashboard', household_id=household.id) }}" class="notif-back-link">← Dashboard</a>
+    <p class="eyebrow">{{ household.name }}</p>
+    <h1>Apartment Calendar</h1>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;" class="reveal is-visible">
+    <a href="{{ url_for('calendar.view', household_id=household.id, year=prev_year, month=prev_month) }}"
+       class="btn btn--ghost">← Prev</a>
+    <h2 style="margin:0;font-size:20px;">{{ month_name }}</h2>
+    <a href="{{ url_for('calendar.view', household_id=household.id, year=next_year, month=next_month) }}"
+       class="btn btn--ghost">Next →</a>
+  </div>
+
+  <div class="card reveal is-visible" style="padding:0;overflow:hidden;">
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid rgba(11,27,58,0.1);">
+      {% for day in ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"] %}
+      <div style="padding:10px 8px;text-align:center;font-size:11px;font-weight:700;color:rgba(11,27,58,0.45);letter-spacing:.06em;">{{ day }}</div>
+      {% endfor %}
+    </div>
+    {% for week in weeks %}
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);">
+      {% for day in week %}
+      {% set is_today = (day == today) %}
+      {% set is_this_month = (day.month == month) %}
+      {% set day_events = events_by_date.get(day, []) %}
+      <div style="min-height:80px;padding:8px;border-right:1px solid rgba(11,27,58,0.06);border-bottom:1px solid rgba(11,27,58,0.06);{% if not is_this_month %}opacity:0.35;{% endif %}">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:4px;">
+          <span style="{% if is_today %}background:var(--blue);color:#fff;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;{% else %}color:rgba(11,27,58,0.7);{% endif %}font-size:13px;">
+            {{ day.day }}
+          </span>
+        </div>
+        {% for ev in day_events %}
+        <div style="
+          font-size:11px;font-weight:600;border-radius:4px;padding:2px 6px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+          {% if ev.type == 'rent_due' %}background:#FFF3CD;color:#856404;
+          {% elif ev.type == 'chore' %}background:#D1FAE5;color:#065F46;
+          {% else %}background:#DBEAFE;color:#1E40AF;{% endif %}
+        ">
+          {% if ev.type == 'rent_due' %}💰{% elif ev.type == 'chore' %}🧹{% else %}📅{% endif %}
+          {{ ev.title }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <div style="margin-top:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;" class="reveal is-visible">
+    <a href="{{ url_for('calendar.new_event', household_id=household.id) }}" class="btn btn--primary">+ Add event</a>
+    <span style="font-size:12px;display:flex;gap:12px;align-items:center;">
+      <span style="background:#FFF3CD;color:#856404;border-radius:4px;padding:2px 8px;font-weight:600;">💰 Rent due</span>
+      <span style="background:#D1FAE5;color:#065F46;border-radius:4px;padding:2px 8px;font-weight:600;">🧹 Chore</span>
+      <span style="background:#DBEAFE;color:#1E40AF;border-radius:4px;padding:2px 8px;font-weight:600;">📅 Custom</span>
+    </span>
+  </div>
+
+</div>
+{% endblock %}

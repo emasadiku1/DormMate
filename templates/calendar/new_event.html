@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% block title %}Add Event — {{ household.name }}{% endblock %}
+{% block content %}
+<div class="page-shell page-shell--narrow">
+
+  <div class="page-head reveal is-visible">
+    <a href="{{ url_for('calendar.view', household_id=household.id) }}" class="notif-back-link">← Calendar</a>
+    <p class="eyebrow">{{ household.name }}</p>
+    <h1>Add Event</h1>
+  </div>
+
+  <div class="card reveal is-visible" style="padding:28px;">
+    <form method="POST">
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <input type="text" name="title" class="form-input" placeholder="e.g. Rent Due, Movie Night…" required autofocus>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input type="date" name="date" class="form-input" value="{{ today }}" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select name="type" class="form-input">
+          {% for value, label in event_types %}
+          <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button type="submit" class="btn btn--primary">Add event</button>
+        <a href="{{ url_for('calendar.view', household_id=household.id) }}" class="btn btn--ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

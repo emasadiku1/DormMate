@@ -1,0 +1,257 @@
+{% extends "layout.html" %}
+{% block title %}{{ household.name }} — DormMate{% endblock %}
+{% block content %}
+<div class="dash">
+
+  {# ── Header ─────────────────────────────────────────────────────────────── #}
+  <div class="dash__head reveal is-visible">
+    <div>
+      <p class="eyebrow">Your household</p>
+      <h1>{{ household.name }}</h1>
+      <p class="dash__head-sub">{{ member_count }} member{{ 's' if member_count != 1 }} &middot; {{ expense_count }} recent expense{{ 's' if expense_count != 1 }}</p>
+    </div>
+    <button class="invite-chip" onclick="copyInviteCode('{{ household.invite_code }}')" title="Click to copy">
+      <div>
+        <span class="invite-chip__label">INVITE CODE</span>
+        <span class="invite-chip__code" id="invite-code-text">{{ household.invite_code }}</span>
+      </div>
+      <span class="invite-chip__copy" id="invite-copy-label">Copy</span>
+    </button>
+  </div>
+
+  {# ── Stat bento ──────────────────────────────────────────────────────────── #}
+  <div class="dash__grid reveal is-visible">
+
+    {% if my_balance > 0.005 %}
+    <div class="balance-card">
+      <p class="balance-card__label">YOU ARE OWED</p>
+      <p class="balance-card__amount">${{ "%.2f"|format(my_balance) }}</p>
+      <p class="balance-card__sub">Others still need to pay you back</p>
+      <div class="balance-card__actions">
+        <a href="{{ url_for('balances.balances', household_id=household.id) }}" class="btn btn--ghost">Balances</a>
+        <a href="{{ url_for('settle.settle', household_id=household.id) }}" class="btn btn--ghost">Settle up</a>
+      </div>
+    </div>
+    {% elif my_balance < -0.005 %}
+    <div class="balance-card balance-card--owes">
+      <p class="balance-card__label">YOU OWE</p>
+      <p class="balance-card__amount">${{ "%.2f"|format(my_balance|abs) }}</p>
+      <p class="balance-card__sub">Time to settle up with your roommates</p>
+      <div class="balance-card__actions">
+        <a href="{{ url_for('settle.settle', household_id=household.id) }}" class="btn btn--ghost">Settle up</a>
+        <a href="{{ url_for('balances.balances', household_id=household.id) }}" class="btn btn--ghost">Balances</a>
+      </div>
+    </div>
+    {% else %}
+    <div class="balance-card balance-card--even">
+      <p class="balance-card__label">YOUR BALANCE</p>
+      <p class="balance-card__amount">All clear!</p>
+      <p class="balance-card__sub">You're fully settled with your household 🎉</p>
+      <div class="balance-card__actions">
+        <a href="{{ url_for('expenses.new_expense', household_id=household.id) }}" class="btn btn--ghost">Log expense</a>
+        <a href="{{ url_for('balances.balances', household_id=household.id) }}" class="btn btn--ghost">Balances</a>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="stat-card">
+      <div class="stat-card__value">${{ "%.0f"|format(total_expenses) }}</div>
+      <div class="stat-card__label">Total logged</div>
+    </div>
+    <div class="stat-card {% if overdue_count > 0 %}stat-card--alert{% endif %}">
+      <div class="stat-card__value">
+        {% if overdue_count > 0 %}⚠ {{ overdue_count }}{% elif due_today_count > 0 %}📅 {{ due_today_count }}{% else %}{{ chore_count }}{% endif %}
+      </div>
+      <div class="stat-card__label">
+        {% if overdue_count > 0 %}Overdue chore{{ 's' if overdue_count != 1 }}
+        {% elif due_today_count > 0 %}Due today
+        {% else %}Active chore{{ 's' if chore_count != 1 }}{% endif %}
+      </div>
+      <a href="{{ url_for('chores.list_chores', household_id=household.id) }}" class="stat-card__link">View →</a>
+    </div>
+    <div class="stat-card {% if pending_items_count > 0 %}stat-card--shop{% endif %}">
+      <div class="stat-card__value">{{ pending_items_count }}</div>
+      <div class="stat-card__label">Item{{ 's' if pending_items_count != 1 }} to buy</div>
+      <a href="{{ url_for('shopping.shopping_list', household_id=household.id) }}" class="stat-card__link">View →</a>
+    </div>
+
+  </div>
+
+  {# ── Main + Sidebar ──────────────────────────────────────────────────────── #}
+  <div class="dash__cols">
+
+    {# ── LEFT COLUMN ─────────────────────────────────────────────────────── #}
+    <div class="dash__main">
+
+      {# Recent Expenses #}
+      <div class="panel reveal is-visible">
+        <div class="panel__head">
+          <p class="panel__title">Recent Expenses</p>
+          <a href="{{ url_for('expenses.list_expenses', household_id=household.id) }}" class="panel__link">View all →</a>
+        </div>
+        {% if recent_expenses %}
+          {% for expense in recent_expenses %}
+          <a href="{{ url_for('expenses.expense_detail', expense_id=expense.id) }}" class="activity-row">
+            <div class="activity-row__icon">{{ category_icons.get(expense.category, '📦') }}</div>
+            <div class="activity-row__main">
+              <span class="activity-row__title">{{ expense.note or (expense.category | capitalize) }}</span>
+              <span class="activity-row__meta">{{ expense.date.strftime('%b %d') }} &middot; paid by {{ expense.payer.name }}</span>
+            </div>
+            <span class="activity-row__amount">${{ "%.2f"|format(expense.amount|float) }}</span>
+          </a>
+          {% endfor %}
+        {% else %}
+          <div class="panel__empty">
+            No expenses yet.
+            <a href="{{ url_for('expenses.new_expense', household_id=household.id) }}" style="color:var(--blue);font-weight:600;">Add the first one →</a>
+          </div>
+        {% endif %}
+      </div>
+
+      {# Upcoming This Week #}
+      <div class="panel reveal is-visible">
+        <div class="panel__head">
+          <p class="panel__title">📅 This Week</p>
+          <a href="{{ url_for('calendar.view', household_id=household.id) }}" class="panel__link">Calendar →</a>
+        </div>
+        {% set has_upcoming = upcoming_events or upcoming_chore_events %}
+        {% if has_upcoming %}
+          {% for ev in upcoming_events %}
+          <div class="activity-row" style="text-decoration:none;">
+            <div class="activity-row__icon">{% if ev.type == 'rent_due' %}💰{% elif ev.type == 'chore' %}🧹{% else %}📅{% endif %}</div>
+            <div class="activity-row__main">
+              <span class="activity-row__title">{{ ev.title }}</span>
+              <span class="activity-row__meta">{{ ev.date.strftime('%a, %b %d') }}</span>
+            </div>
+            {% if ev.date == today %}<span style="font-size:11px;font-weight:700;background:#DBEAFE;color:#1E40AF;padding:2px 8px;border-radius:4px;">Today</span>{% endif %}
+          </div>
+          {% endfor %}
+          {% for chore in upcoming_chore_events %}
+          <a href="{{ url_for('chores.chore_detail', household_id=household.id, chore_id=chore.id) }}" class="activity-row">
+            <div class="activity-row__icon">🧹</div>
+            <div class="activity-row__main">
+              <span class="activity-row__title">{{ chore.title }}</span>
+              <span class="activity-row__meta">Due {{ chore.next_due_date.strftime('%a, %b %d') }}</span>
+            </div>
+            {% if chore.is_due_today %}<span style="font-size:11px;font-weight:700;background:#DBEAFE;color:#1E40AF;padding:2px 8px;border-radius:4px;">Today</span>{% endif %}
+          </a>
+          {% endfor %}
+        {% else %}
+          <div class="panel__empty">Nothing coming up this week. 🌴
+            <a href="{{ url_for('calendar.new_event', household_id=household.id) }}" style="color:var(--blue);font-weight:600;">Add event →</a>
+          </div>
+        {% endif %}
+      </div>
+
+      {# Open Issues #}
+      <div class="panel reveal is-visible">
+        <div class="panel__head">
+          <p class="panel__title">🔧 Maintenance</p>
+          <a href="{{ url_for('issues.list_issues', household_id=household.id) }}" class="panel__link">View all →</a>
+        </div>
+        {% if open_issues_count > 0 %}
+          <div class="activity-row" style="cursor:default;">
+            <div class="activity-row__icon" style="font-size:22px;">⚠️</div>
+            <div class="activity-row__main">
+              <span class="activity-row__title">{{ open_issues_count }} open issue{{ 's' if open_issues_count != 1 }}</span>
+              <span class="activity-row__meta">Tap to view and update status</span>
+            </div>
+            <a href="{{ url_for('issues.list_issues', household_id=household.id) }}" class="btn btn--ghost" style="font-size:12px;padding:4px 12px;flex-shrink:0;">View</a>
+          </div>
+        {% else %}
+          <div class="panel__empty">No open issues. 🎉
+            <a href="{{ url_for('issues.new_issue', household_id=household.id) }}" style="color:var(--blue);font-weight:600;">Report one →</a>
+          </div>
+        {% endif %}
+      </div>
+
+      {# Spending by Category #}
+      {% if category_data %}
+      <div class="panel reveal is-visible">
+        <div class="panel__head">
+          <p class="panel__title">Spending by Category</p>
+          <a href="{{ url_for('reports.dashboard', household_id=household.id) }}" class="panel__link">Full report →</a>
+        </div>
+        {% for cat in category_data %}
+        <div class="cat-bar">
+          <div class="cat-bar__head">
+            <span>{{ cat.icon }} {{ cat.name }}</span>
+            <span class="cat-bar__amount">${{ "%.2f"|format(cat.amount) }}</span>
+          </div>
+          <div class="cat-bar__track">
+            <div class="cat-bar__fill" style="width:{{ cat.pct }}%"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+    </div>
+
+    {# ── RIGHT COLUMN ─────────────────────────────────────────────────────── #}
+    <div class="dash__side">
+
+      <div class="panel reveal is-visible">
+        <p class="panel__title">Quick Actions</p>
+        <div class="quick-actions">
+          <a href="{{ url_for('expenses.new_expense', household_id=household.id) }}" class="btn btn--primary quick-actions__primary">+ Log expense</a>
+          <div class="quick-actions__grid">
+            <a href="{{ url_for('chores.list_chores', household_id=household.id) }}" class="btn btn--ghost">
+              🧹 Chores{% if overdue_count > 0 %} <span style="background:var(--coral);color:#fff;border-radius:999px;padding:1px 7px;font-size:11px;margin-left:4px;">{{ overdue_count }}</span>{% endif %}
+            </a>
+            <a href="{{ url_for('shopping.shopping_list', household_id=household.id) }}" class="btn btn--ghost">
+              🛒 Shopping{% if pending_items_count > 0 %} <span style="background:var(--blue);color:#fff;border-radius:999px;padding:1px 7px;font-size:11px;margin-left:4px;">{{ pending_items_count }}</span>{% endif %}
+            </a>
+            <a href="{{ url_for('calendar.view', household_id=household.id) }}" class="btn btn--ghost">📅 Calendar</a>
+            <a href="{{ url_for('settle.settle', household_id=household.id) }}" class="btn btn--ghost">🤝 Settle up</a>
+            <a href="{{ url_for('balances.balances', household_id=household.id) }}" class="btn btn--ghost">⚖️ Balances</a>
+            <a href="{{ url_for('stats.leaderboard', household_id=household.id) }}" class="btn btn--ghost">🏅 Leaderboard</a>
+            <a href="{{ url_for('reports.dashboard', household_id=household.id) }}" class="btn btn--ghost">📊 Reports</a>
+            <a href="{{ url_for('house_rules.view', household_id=household.id) }}" class="btn btn--ghost">📋 Rules</a>
+            <a href="{{ url_for('issues.list_issues', household_id=household.id) }}" class="btn btn--ghost">
+              🔧 Maintenance{% if open_issues_count > 0 %} <span style="background:var(--coral);color:#fff;border-radius:999px;padding:1px 7px;font-size:11px;margin-left:4px;">{{ open_issues_count }}</span>{% endif %}
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {# Badge teaser #}
+      {% if my_badge_count > 0 %}
+      <div class="panel reveal is-visible">
+        <div class="panel__head">
+          <p class="panel__title">Your Badges</p>
+          <a href="{{ url_for('stats.leaderboard', household_id=household.id) }}" class="panel__link">Leaderboard →</a>
+        </div>
+        <p style="font-size:28px;margin:4px 0 6px;">🏅</p>
+        <p style="font-size:14px;color:rgba(11,27,58,0.7);">You've earned <strong>{{ my_badge_count }}</strong> badge{{ 's' if my_badge_count != 1 }}. Keep it up!</p>
+      </div>
+      {% endif %}
+
+      <div class="panel reveal is-visible">
+        <p class="panel__title">Members</p>
+        {% for m in memberships %}
+        <div class="member-chip">
+          <div class="member-chip__avatar">{{ m.user.name[0].upper() }}</div>
+          <span class="member-chip__name">
+            {{ m.user.name }}{% if m.user.id == current_user.id %} <em style="font-weight:400;color:rgba(11,27,58,0.45);font-size:13px;">(you)</em>{% endif %}
+          </span>
+          {% if m.is_admin %}<span class="pill--admin">Admin</span>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+function copyInviteCode(code) {
+  navigator.clipboard.writeText(code).then(() => {
+    const label = document.getElementById('invite-copy-label');
+    label.textContent = 'Copied!';
+    setTimeout(() => label.textContent = 'Copy', 2000);
+  });
+}
+</script>
+{% endblock %}

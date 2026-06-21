@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DormMate</title>
+  <meta name="description" content="Nestly tracks shared expenses, chores, and shopping lists for roommates so nothing lives in a group chat or someone's memory.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <header class="nav">
+    <div class="nav__inner">
+      <a href="/" class="nav__brand">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Nestly logo placeholder" class="nav__logo">
+      </a>
+
+      <nav class="nav__links" id="navLinks">
+        <a href="#pillars">What it does</a>
+        <a href="#roles">Who it's for</a>
+        <a href="#how-it-works">How it works</a>
+      </nav>
+
+      {% if current_user %}
+        <a href="{{ url_for('household.dashboard_redirect') }}" class="btn btn--primary nav__cta">Go to dashboard</a>
+      {% else %}
+        <a href="{{ url_for('auth.signup') }}" class="btn btn--primary nav__cta">Get started</a>
+      {% endif %}
+
+      <button class="nav__toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="hero__inner">
+      <div class="hero__copy">
+        <p class="eyebrow">For the whole lease</p>
+        <h1>Stop running the apartment from memory.</h1>
+        <p class="hero__sub">
+          DormMate keeps one shared ledger for what's owed, what's due, and whose turn it is —
+          so the group chat can go back to being a group chat.
+        </p>
+        <div class="hero__actions">
+          {% if current_user %}
+            <a href="{{ url_for('household.dashboard_redirect') }}" class="btn btn--primary btn--lg">Go to dashboard</a>
+          {% else %}
+            <a href="{{ url_for('auth.signup') }}" class="btn btn--primary btn--lg">Create your household</a>
+          {% endif %}
+          <a href="#how-it-works" class="btn btn--ghost btn--lg">See how it works</a>
+        </div>
+      </div>
+
+      <div class="hero__stack" aria-hidden="true">
+        <article class="ledger-card ledger-card--debt">
+          <p class="ledger-card__eyebrow">BALANCE</p>
+          <p class="ledger-card__line">Alex owes Sam</p>
+          <p class="ledger-card__amount">$14.00</p>
+        </article>
+        <article class="ledger-card ledger-card--chore">
+          <p class="ledger-card__eyebrow">CHORE · TODAY</p>
+          <p class="ledger-card__line">Take out the trash</p>
+          <p class="ledger-card__amount">Jordan's turn</p>
+        </article>
+        <article class="ledger-card ledger-card--list">
+          <p class="ledger-card__eyebrow">SHOPPING LIST</p>
+          <p class="ledger-card__line">Paper towels, dish soap</p>
+          <p class="ledger-card__amount">added by Sam</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROBLEM ============ -->
+  <section class="problem reveal">
+    <div class="problem__inner">
+      <p class="eyebrow">Why this exists</p>
+      <h2>Three group chats. Zero agreement.</h2>
+      <p>
+        Someone fronts the electric bill and forgets to ask for it back. Someone's skipped
+        the dishes for two weeks. Nobody remembers whose turn it is to buy paper towels.
+        None of that is a person problem — it's a tracking problem, and right now the only
+        place it's tracked is in someone's head.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ PILLARS ============ -->
+  <section class="pillars" id="pillars">
+    <div class="pillars__head reveal">
+      <p class="eyebrow">One app, three jobs</p>
+      <h2>Money, chores, and the list — finally in the same place.</h2>
+    </div>
+    <div class="pillars__grid">
+      <article class="pillar-card reveal">
+        <p class="pillar-card__label">MONEY</p>
+        <h3>Split it, settle it, forget the math.</h3>
+        <p>Log an expense, split it equal, by percentage, or custom, and DormMate works out
+          who owes who — down to the fewest payments needed to zero everyone out.</p>
+      </article>
+      <article class="pillar-card reveal">
+        <p class="pillar-card__label">CHORES</p>
+        <h3>A rotation nobody has to police.</h3>
+        <p>Assign chores to a person or let them auto-rotate through the household.
+          Overdue tasks surface on their own — no one has to be the one who brings it up.</p>
+      </article>
+      <article class="pillar-card reveal">
+        <p class="pillar-card__label">THE LIST</p>
+        <h3>One shopping list, not four texts.</h3>
+        <p>Add what's needed, check it off when it's bought, and link the purchase straight
+          to an expense so the list and the ledger never disagree.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ ROLES ============ -->
+  <section class="roles" id="roles">
+    <div class="roles__head reveal">
+      <p class="eyebrow">Whoever's on the lease</p>
+      <h2>Built for every role in the house.</h2>
+    </div>
+    <div class="roles__grid">
+      <article class="role-card reveal">
+        <h3>The organizer</h3>
+        <p>Set up the household, see every balance and chore status at a glance, and stop
+          being the one who has to ask.</p>
+      </article>
+      <article class="role-card reveal">
+        <h3>The casual roommate</h3>
+        <p>Get a notification when rent's due or it's your turn for the trash. That's the
+          whole job.</p>
+      </article>
+      <article class="role-card reveal">
+        <h3>The new tenant</h3>
+        <p>Walk into a household where the rules and routines are already written down,
+          not assumed.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ SETTLE-UP DIAGRAM ============ -->
+  <section class="settle" id="how-it-works">
+    <div class="settle__inner">
+      <div class="settle__copy reveal">
+        <p class="eyebrow">The debt calculator</p>
+        <h2>Four debts. Two payments.</h2>
+        <p>DormMate doesn't just list what everyone owes — it simplifies it, so a household
+          juggling several small debts ends up with the fewest transfers possible to clear
+          them all.</p>
+      </div>
+
+      <div class="settle__diagram reveal">
+        <div class="settle__col settle__col--before">
+          <p class="settle__col-label">BEFORE</p>
+          <div class="settle__row"><span>Alex → Sam</span><span>$14</span></div>
+          <div class="settle__row"><span>Sam → Jordan</span><span>$9</span></div>
+          <div class="settle__row"><span>Jordan → Alex</span><span>$5</span></div>
+          <div class="settle__row"><span>Alex → Jordan</span><span>$3</span></div>
+        </div>
+        <span class="settle__arrow">→</span>
+        <div class="settle__col settle__col--after">
+          <p class="settle__col-label">AFTER</p>
+          <div class="settle__row"><span>Alex → Jordan</span><span>$11</span></div>
+          <div class="settle__row"><span>Sam → Jordan</span><span>$9</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CTA ============ -->
+  <section class="cta" id="get-started">
+    <div class="cta__inner reveal">
+      <h2>Move in. Skip the math.</h2>
+      <p>Set up your household in a couple minutes, invite the rest of the lease, and let
+        DormMate hold the ledger.</p>
+      {% if current_user %}
+        <a href="{{ url_for('household.dashboard_redirect') }}" class="btn btn--coral btn--lg">Go to dashboard</a>
+      {% else %}
+        <a href="{{ url_for('auth.signup') }}" class="btn btn--coral btn--lg">Create your household</a>
+      {% endif %}
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer__inner">
+      <div class="footer__brand">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Nestly logo placeholder" class="nav__logo">
+      </div>
+      <p class="footer__tag">Splitting bills, not friendships.</p>
+      <p class="footer__copy">&copy; 2026 DormMate. Built for roommates everywhere.</p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

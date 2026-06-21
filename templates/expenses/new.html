@@ -1,0 +1,153 @@
+{% extends "layout.html" %}
+{% block title %}{% if expense %}Edit expense{% else %}Log an expense{% endif %} — {{ household.name }}{% endblock %}
+{% block content %}
+<div class="page-shell page-shell--narrow">
+
+  <div class="page-head reveal is-visible">
+    {% if expense %}
+    <a href="{{ url_for('expenses.expense_detail', expense_id=expense.id) }}" class="notif-back-link">← Expense</a>
+    {% else %}
+    <a href="{{ url_for('expenses.list_expenses', household_id=household.id) }}" class="notif-back-link">← Expenses</a>
+    {% endif %}
+    <p class="eyebrow">{{ household.name }}</p>
+    <h1>{% if expense %}Edit expense{% else %}Log an expense{% endif %}</h1>
+  </div>
+
+  <div class="card reveal is-visible" style="padding:28px;">
+    <form method="POST" id="expense-form">
+
+      <div class="form-row form-row--2col">
+        <div class="form-group">
+          <label class="form-label" for="amount">Amount</label>
+          <input class="form-input" type="number" step="0.01" min="0.01" id="amount" name="amount"
+                 placeholder="0.00" required autofocus
+                 value="{{ request.form.get('amount', expense.amount if expense else '') }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="date">Date</label>
+          <input class="form-input" type="date" id="date" name="date"
+                 value="{{ request.form.get('date', expense.date.isoformat() if expense else today) }}">
+        </div>
+      </div>
+
+      <div class="form-row form-row--2col">
+        <div class="form-group">
+          <label class="form-label" for="payer_id">Paid by</label>
+          <select class="form-input" id="payer_id" name="payer_id">
+            {% for member in members %}
+              <option value="{{ member.id }}"
+                {% if request.form.get('payer_id', (expense.payer_id if expense else current_user.id)|string) == member.id|string %}selected{% endif %}>
+                {{ member.name }}{% if member.id == current_user.id %} (you){% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="category">Category</label>
+          <select class="form-input" id="category" name="category">
+            {% for value, label in categories %}
+              <option value="{{ value }}" {% if request.form.get('category', expense.category if expense else 'general') == value %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="note">Note <span class="form-label__optional">(optional)</span></label>
+        <input class="form-input" type="text" id="note" name="note"
+               placeholder="e.g. Pizza night, Costco run…"
+               value="{{ request.form.get('note', expense.note if expense else '') }}">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Split</label>
+        <div class="split-tabs" id="split-tabs">
+          <label class="split-tab {% if request.form.get('split_type', expense.split_type if expense else 'equal') == 'equal' %}split-tab--active{% endif %}">
+            <input type="radio" name="split_type" value="equal" onclick="showSplitPanel('equal')"
+                   {% if request.form.get('split_type', expense.split_type if expense else 'equal') == 'equal' %}checked{% endif %}>
+            ⚖️ Equal
+          </label>
+          <label class="split-tab {% if request.form.get('split_type', expense.split_type if expense else '') == 'percentage' %}split-tab--active{% endif %}">
+            <input type="radio" name="split_type" value="percentage" onclick="showSplitPanel('percentage')"
+                   {% if request.form.get('split_type', expense.split_type if expense else '') == 'percentage' %}checked{% endif %}>
+            % Percentage
+          </label>
+          <label class="split-tab {% if request.form.get('split_type', expense.split_type if expense else '') == 'custom' %}split-tab--active{% endif %}">
+            <input type="radio" name="split_type" value="custom" onclick="showSplitPanel('custom')"
+                   {% if request.form.get('split_type', expense.split_type if expense else '') == 'custom' %}checked{% endif %}>
+            ✏️ Custom
+          </label>
+        </div>
+      </div>
+
+      <div id="equal-panel" style="display:{% if request.form.get('split_type', expense.split_type if expense else 'equal') == 'equal' %}block{% else %}none{% endif %};">
+        <div class="split-panel__hint">
+          Split evenly across all {{ members|length }} member{% if members|length != 1 %}s{% endif %}.
+        </div>
+      </div>
+
+      <div id="percentage-panel" style="display:{% if request.form.get('split_type', expense.split_type if expense else '') == 'percentage' %}block{% else %}none{% endif %};">
+        {% for member in members %}
+        <div class="form-group" style="display:flex;align-items:center;gap:12px;">
+          <label class="form-label" style="flex:1;margin:0;" for="pct_{{ member.id }}">
+            {{ member.name }}{% if member.id == current_user.id %} (you){% endif %}
+          </label>
+          <input class="form-input" style="width:90px;" type="number" step="0.01" min="0" max="100"
+                 id="pct_{{ member.id }}" name="pct_{{ member.id }}"
+                 placeholder="0" value="{{ request.form.get('pct_' ~ member.id, existing_pcts.get(member.id, '') if expense else '') }}">
+          <span style="color:rgba(11,27,58,0.5);font-weight:600;">%</span>
+        </div>
+        {% endfor %}
+        <p class="split-panel__hint">Percentages must add up to 100%.</p>
+      </div>
+
+      <div id="custom-panel" style="display:{% if request.form.get('split_type', expense.split_type if expense else '') == 'custom' %}block{% else %}none{% endif %};">
+        {% for member in members %}
+        <div class="form-group" style="display:flex;align-items:center;gap:12px;">
+          <label class="form-label" style="flex:1;margin:0;" for="custom_{{ member.id }}">
+            {{ member.name }}{% if member.id == current_user.id %} (you){% endif %}
+          </label>
+          <span style="color:rgba(11,27,58,0.5);font-weight:600;">$</span>
+          <input class="form-input" style="width:110px;" type="number" step="0.01" min="0"
+                 id="custom_{{ member.id }}" name="custom_{{ member.id }}"
+                 placeholder="0.00" value="{{ request.form.get('custom_' ~ member.id, existing_customs.get(member.id, '') if expense else '') }}">
+        </div>
+        {% endfor %}
+        <p class="split-panel__hint">Amounts must add up to the total.</p>
+      </div>
+
+      {% if expense %}
+      <p class="split-panel__hint" style="margin-top:4px;">
+        Changing the amount or split will recalculate everyone's share and reset settlement status for anyone affected.
+      </p>
+      {% endif %}
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn--primary">{% if expense %}Save changes{% else %}Log expense{% endif %}</button>
+        {% if expense %}
+        <a href="{{ url_for('expenses.expense_detail', expense_id=expense.id) }}" class="btn btn--ghost">Cancel</a>
+        {% else %}
+        <a href="{{ url_for('expenses.list_expenses', household_id=household.id) }}" class="btn btn--ghost">Cancel</a>
+        {% endif %}
+      </div>
+
+    </form>
+  </div>
+
+</div>
+
+<script>
+function showSplitPanel(type) {
+  document.getElementById('equal-panel').style.display = type === 'equal' ? 'block' : 'none';
+  document.getElementById('percentage-panel').style.display = type === 'percentage' ? 'block' : 'none';
+  document.getElementById('custom-panel').style.display = type === 'custom' ? 'block' : 'none';
+
+  document.querySelectorAll('#split-tabs .split-tab').forEach(function (tab) {
+    var input = tab.querySelector('input[type="radio"]');
+    tab.classList.toggle('split-tab--active', input.value === type);
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends "layout.html" %}
+{% block title %}Expense — {{ household.name }}{% endblock %}
+{% block content %}
+<div class="page-shell page-shell--narrow">
+
+  <div class="page-head reveal is-visible" style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+    <div>
+      <a href="{{ url_for('expenses.list_expenses', household_id=household.id) }}" class="notif-back-link">← Expenses</a>
+      <p class="eyebrow">{{ household.name }}</p>
+      <h1>{{ expense.note or (expense.category | capitalize) }}</h1>
+    </div>
+    {% if current_user.id == expense.payer_id or membership.is_admin %}
+    <div style="display:flex;gap:8px;">
+      <a href="{{ url_for('expenses.edit_expense', household_id=household.id, expense_id=expense.id) }}" class="btn btn--ghost">Edit</a>
+      <form method="POST" action="{{ url_for('expenses.delete_expense', household_id=household.id, expense_id=expense.id) }}"
+            onsubmit="return confirm('Delete this expense? This cannot be undone.');">
+        <button type="submit" class="btn btn--ghost" style="color:#B91C1C;">Delete</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="card reveal is-visible" style="padding:24px;margin-bottom:16px;">
+    <div style="display:flex;gap:32px;flex-wrap:wrap;">
+      <div>
+        <p class="panel__title" style="margin-bottom:4px;">AMOUNT</p>
+        <p style="font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--blue);margin:0;">${{ "%.2f"|format(expense.amount|float) }}</p>
+      </div>
+      <div>
+        <p class="panel__title" style="margin-bottom:4px;">PAID BY</p>
+        <p style="font-weight:600;font-size:16px;margin:0;">{{ expense.payer.name }}</p>
+      </div>
+      <div>
+        <p class="panel__title" style="margin-bottom:4px;">DATE</p>
+        <p style="font-weight:600;font-size:16px;margin:0;">{{ expense.date.strftime('%b %d, %Y') }}</p>
+      </div>
+      <div>
+        <p class="panel__title" style="margin-bottom:4px;">CATEGORY</p>
+        <p style="font-weight:600;font-size:16px;margin:0;">{{ expense.category | capitalize }}</p>
+      </div>
+      <div>
+        <p class="panel__title" style="margin-bottom:4px;">SPLIT</p>
+        <p style="font-weight:600;font-size:16px;margin:0;">{{ expense.split_type | capitalize }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card reveal is-visible" style="padding:20px 24px;margin-bottom:16px;">
+    <p class="panel__title" style="margin-bottom:12px;">SPLITS</p>
+    {% for split in expense.splits %}
+    <div class="member-row" style="padding:10px 0;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;">
+          {{ split.user.name[0].upper() }}
+        </div>
+        <span style="font-weight:600;">{{ split.user.name }}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-weight:700;">${{ "%.2f"|format(split.amount_owed|float) }}</span>
+        {% if split.is_settled %}
+        <span style="background:#D1FAE5;color:#065F46;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;">PAID</span>
+        {% else %}
+        <form method="POST" action="{{ url_for('settle.mark_paid', split_id=split.id) }}">
+          <input type="hidden" name="next" value="{{ url_for('expenses.expense_detail', expense_id=expense.id) }}">
+          <button type="submit" class="btn btn--ghost" style="font-size:12px;padding:4px 10px;">Mark paid</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {# ── Comment thread ───────────────────────────────────────────────────────── #}
+  <div class="card reveal is-visible" style="padding:20px 24px;">
+    <p class="panel__title" style="margin-bottom:14px;">COMMENTS</p>
+
+    {% if comments %}
+    {% for comment in comments %}
+    <div style="display:flex;gap:10px;margin-bottom:14px;">
+      <div style="width:32px;height:32px;border-radius:50%;background:rgba(59,111,240,0.12);color:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">
+        {{ comment.user.name[0].upper() }}
+      </div>
+      <div>
+        <p style="font-weight:700;font-size:13px;margin:0 0 2px;">
+          {{ comment.user.name }}
+          <span style="font-weight:400;color:rgba(11,27,58,0.4);font-size:12px;margin-left:6px;">{{ comment.created_at.strftime('%b %d, %Y · %H:%M') }}</span>
+        </p>
+        <p style="font-size:14px;color:rgba(11,27,58,0.8);margin:0;line-height:1.5;">{{ comment.body }}</p>
+      </div>
+    </div>
+    {% endfor %}
+    <div style="border-top:1px solid rgba(11,27,58,0.08);margin:16px 0;"></div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('expenses.add_comment', household_id=household.id, expense_id=expense.id) }}" style="display:flex;gap:10px;align-items:flex-end;">
+      <div class="form-group" style="flex:1;margin-bottom:0;">
+        <input type="text" name="body" class="form-input" placeholder="Add a comment…" required>
+      </div>
+      <button type="submit" class="btn btn--primary" style="flex-shrink:0;">Post</button>
+    </form>
+  </div>
+
+  <div style="margin-top:16px;">
+    <a href="{{ url_for('expenses.list_expenses', household_id=household.id) }}" class="btn btn--ghost">← All expenses</a>
+  </div>
+
+</div>
+{% endblock %}

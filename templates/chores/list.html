@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+{% block title %}Chores — {{ household.name }}{% endblock %}
+{% block content %}
+<div class="page-shell">
+
+  <div class="page-head reveal is-visible">
+    <a href="{{ url_for('household.dashboard', household_id=household.id) }}" class="notif-back-link">← Dashboard</a>
+    <p class="eyebrow">{{ household.name }}</p>
+    <h1>Chores</h1>
+    <p class="page-head__sub">{{ all_chores|length }} active chore{{ 's' if all_chores|length != 1 }}</p>
+  </div>
+
+  <div style="margin-bottom:20px;" class="reveal is-visible">
+    <a href="{{ url_for('chores.new_chore', household_id=household.id) }}" class="btn btn--primary">+ Add chore</a>
+  </div>
+
+  {% if overdue %}
+  <p class="member-list__heading reveal is-visible" style="color:var(--coral);margin-bottom:10px;">⚠ OVERDUE</p>
+  {% for chore in overdue %}
+  <a href="{{ url_for('chores.chore_detail', household_id=household.id, chore_id=chore.id) }}" class="card reveal is-visible" style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;margin-bottom:10px;text-decoration:none;border-left:4px solid var(--coral);">
+    <div>
+      <p style="font-weight:700;font-size:15px;margin:0 0 3px;color:var(--ink);">{{ chore.title }}</p>
+      <p style="font-size:13px;color:rgba(11,27,58,0.55);margin:0;">
+        {{ chore.get_frequency_label() }} ·
+        {% if chore._current_assignee %}{{ chore._current_assignee.name }}{% else %}Unassigned{% endif %}
+      </p>
+    </div>
+    <span style="font-size:12px;font-weight:700;background:#FEE2E2;color:#991B1B;padding:4px 10px;border-radius:6px;white-space:nowrap;">
+      {{ chore.days_until_due|abs }} day{{ 's' if chore.days_until_due|abs != 1 }} overdue
+    </span>
+  </a>
+  {% endfor %}
+  {% endif %}
+
+  {% if due_today %}
+  <p class="member-list__heading reveal is-visible" style="color:var(--blue);margin-bottom:10px;margin-top:{{ '20px' if overdue else '0' }};">📅 DUE TODAY</p>
+  {% for chore in due_today %}
+  <a href="{{ url_for('chores.chore_detail', household_id=household.id, chore_id=chore.id) }}" class="card reveal is-visible" style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;margin-bottom:10px;text-decoration:none;border-left:4px solid var(--blue);">
+    <div>
+      <p style="font-weight:700;font-size:15px;margin:0 0 3px;color:var(--ink);">{{ chore.title }}</p>
+      <p style="font-size:13px;color:rgba(11,27,58,0.55);margin:0;">
+        {{ chore.get_frequency_label() }} ·
+        {% if chore._current_assignee %}{{ chore._current_assignee.name }}{% else %}Unassigned{% endif %}
+      </p>
+    </div>
+    <span style="font-size:12px;font-weight:700;background:#DBEAFE;color:#1E40AF;padding:4px 10px;border-radius:6px;">Today</span>
+  </a>
+  {% endfor %}
+  {% endif %}
+
+  {% if upcoming %}
+  <p class="member-list__heading reveal is-visible" style="margin-bottom:10px;margin-top:{{ '20px' if overdue or due_today else '0' }};">UPCOMING</p>
+  {% for chore in upcoming %}
+  <a href="{{ url_for('chores.chore_detail', household_id=household.id, chore_id=chore.id) }}" class="card reveal is-visible" style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;margin-bottom:10px;text-decoration:none;">
+    <div>
+      <p style="font-weight:700;font-size:15px;margin:0 0 3px;color:var(--ink);">{{ chore.title }}</p>
+      <p style="font-size:13px;color:rgba(11,27,58,0.55);margin:0;">
+        {{ chore.get_frequency_label() }} ·
+        {% if chore._current_assignee %}{{ chore._current_assignee.name }}{% else %}Unassigned{% endif %}
+      </p>
+    </div>
+    <span style="font-size:13px;color:rgba(11,27,58,0.5);">
+      Due {{ chore.next_due_date.strftime('%b %d') }}
+    </span>
+  </a>
+  {% endfor %}
+  {% endif %}
+
+  {% if not all_chores %}
+  <div class="empty-state reveal is-visible">
+    <p>No chores yet — someone's living the dream. 🛋️</p>
+    <a href="{{ url_for('chores.new_chore', household_id=household.id) }}" class="btn btn--primary" style="margin-top:16px;">Add first chore</a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

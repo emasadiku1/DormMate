@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block title %}Join a household — DormMate{% endblock %}
+{% block content %}
+<div class="auth-page">
+  <div class="form-card reveal is-visible">
+    <p class="eyebrow">Join one</p>
+    <h1>Enter your invite code</h1>
+
+    <form method="post" class="form" novalidate>
+      <div class="form-group">
+        <label for="invite_code">Invite code</label>
+        <input type="text" id="invite_code" name="invite_code" value="{{ invite_code or '' }}"
+               placeholder="e.g. A1B2C3" required autofocus style="text-transform:uppercase;">
+      </div>
+      <button type="submit" class="btn btn--primary btn--lg form__submit">Join household</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block title %}Expenses — {{ household.name }}{% endblock %}
+{% block content %}
+<div class="page-shell">
+
+  <div class="page-head reveal is-visible">
+    <a href="{{ url_for('household.dashboard', household_id=household.id) }}" class="notif-back-link">← Dashboard</a>
+    <p class="eyebrow">{{ household.name }}</p>
+    <h1>Expenses</h1>
+    <div class="page-head__actions">
+      <a href="{{ url_for('expenses.new_expense', household_id=household.id) }}" class="btn btn--primary">+ Log expense</a>
+      <a href="{{ url_for('settle.settle', household_id=household.id) }}" class="btn btn--ghost">Settle up</a>
+    </div>
+  </div>
+
+  {% if not expenses %}
+  <div class="empty-state reveal is-visible">
+    <p style="font-size:36px;margin-bottom:12px;">🧾</p>
+    <p style="font-weight:600;margin-bottom:6px;">No expenses yet</p>
+    <p style="margin-bottom:20px;">Log your first shared expense to start tracking who owes what.</p>
+    <a href="{{ url_for('expenses.new_expense', household_id=household.id) }}" class="btn btn--primary">+ Log expense</a>
+  </div>
+
+  {% else %}
+
+  <div class="card reveal is-visible" style="padding:8px 0;">
+    {% for expense in expenses %}
+    <a href="{{ url_for('expenses.expense_detail', expense_id=expense.id) }}"
+       class="member-row" style="padding:14px 24px;text-decoration:none;color:inherit;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(11,27,58,0.06);">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="width:38px;height:38px;border-radius:10px;background:rgba(59,111,240,0.1);display:flex;align-items:center;justify-content:center;font-size:18px;">
+          {{ category_icons.get(expense.category, "📦") if category_icons else "📦" }}
+        </div>
+        <div>
+          <p style="font-weight:700;margin:0;">{{ expense.note or (expense.category | capitalize) }}</p>
+          <p style="font-size:13px;color:rgba(11,27,58,0.5);margin:2px 0 0;">
+            {{ expense.payer.name }} · {{ expense.date.strftime('%b %d, %Y') }} · {{ expense.split_type | capitalize }} split
+          </p>
+        </div>
+      </div>
+      <span style="font-weight:800;font-family:var(--font-display);font-size:18px;color:var(--blue);">
+        ${{ "%.2f"|format(expense.amount|float) }}
+      </span>
+    </a>
+    {% endfor %}
+  </div>
+
+  {% endif %}
+
+</div>
+{% endblock %}

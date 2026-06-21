@@ -1,0 +1,111 @@
+{% extends "layout.html" %}
+{% block title %}Notifications — DormMate{% endblock %}
+
+{% block content %}
+<div class="wrap" style="padding-top: 2rem; padding-bottom: 4rem; max-width: 720px;">
+
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; gap:1rem; flex-wrap:wrap;">
+    <div>
+      <a href="{{ url_for('household.dashboard_redirect') }}" class="notif-back-link">← Back to dashboard</a>
+      <p class="eyebrow">Your inbox</p>
+      <h1 style="font-size:clamp(1.6rem,4vw,2.2rem);">
+        Notifications
+        {% if unread_count > 0 %}
+          <span class="notif-badge notif-badge--lg">{{ unread_count }}</span>
+        {% endif %}
+      </h1>
+    </div>
+
+    {% if unread_count > 0 %}
+    <form action="{{ url_for('notifications.mark_all_read') }}" method="post">
+      <button type="submit" class="btn btn--outline btn--sm">Mark all read</button>
+    </form>
+    {% endif %}
+  </div>
+
+  {# ── Filter tabs ── #}
+  <div class="notif-tabs" role="tablist">
+    {% set types = [
+      ("all",              "All"),
+      ("expense_added",    "Expenses"),
+      ("chore_due",        "Chores"),
+      ("chore_overdue",    "Overdue"),
+      ("payment_received", "Payments"),
+    ] %}
+    {% for val, label in types %}
+    <a href="{{ url_for('notifications.feed', type=val) }}"
+       class="notif-tab {% if filter_type == val %}notif-tab--active{% endif %}"
+       role="tab">{{ label }}</a>
+    {% endfor %}
+  </div>
+
+  {# ── Feed ── #}
+  {% if notifications.items %}
+    <ul class="notif-list">
+      {% for n in notifications.items %}
+      <li class="notif-item {% if not n.is_read %}notif-item--unread{% endif %}">
+        <span class="notif-icon" aria-hidden="true">{{ n.icon }}</span>
+
+        <div class="notif-content">
+          <p class="notif-title">{{ n.title }}</p>
+          {% if n.body %}
+            <p class="notif-body">{{ n.body }}</p>
+          {% endif %}
+          <p class="notif-meta">{{ n.time_ago }}</p>
+        </div>
+
+        <div class="notif-actions">
+          {% if not n.is_read %}
+          <form action="{{ url_for('notifications.mark_read', notif_id=n.id) }}" method="post" style="display:inline;">
+            <button type="submit" class="btn btn--primary btn--sm" title="Mark read{% if n.link_url %} &amp; open{% endif %}">
+              {% if n.link_url %}View →{% else %}✓{% endif %}
+            </button>
+          </form>
+          {% elif n.link_url %}
+          <a href="{{ n.link_url }}" class="btn btn--outline btn--sm">View →</a>
+          {% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+
+    {# Pagination #}
+    {% if notifications.pages > 1 %}
+    <div class="pagination">
+      {% if notifications.has_prev %}
+        <a href="{{ url_for('notifications.feed', page=notifications.prev_num, type=filter_type) }}" class="btn btn--outline btn--sm">← Newer</a>
+      {% endif %}
+      <span style="font-size:.85rem; color:var(--ink); opacity:.5;">
+        Page {{ notifications.page }} of {{ notifications.pages }}
+      </span>
+      {% if notifications.has_next %}
+        <a href="{{ url_for('notifications.feed', page=notifications.next_num, type=filter_type) }}" class="btn btn--outline btn--sm">Older →</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  {% else %}
+    <div class="notif-empty">
+      <span style="font-size:3rem;">🔕</span>
+      <p>No notifications here yet.</p>
+      {% if filter_type != "all" %}
+        <a href="{{ url_for('notifications.feed') }}" class="btn btn--outline btn--sm" style="margin-top:.75rem;">See all</a>
+      {% endif %}
+    </div>
+  {% endif %}
+
+</div>
+
+{# ── Email simulation notice ── #}
+<div class="wrap" style="max-width:720px; padding-bottom:3rem;">
+  <div class="email-sim-notice">
+    <span style="font-size:1.2rem;">📧</span>
+    <div>
+      <strong>Email simulation active.</strong>
+      Emails are printed to the server console instead of being sent.
+      To enable real email, add SMTP settings to your <code>config.py</code> and swap
+      <code>_send_email()</code> in <code>services/notifications.py</code> for Flask-Mail.
+    </div>
+  </div>
+</div>
+{% endblock %}

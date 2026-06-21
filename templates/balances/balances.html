@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+{% block title %}Balances — {{ household.name }}{% endblock %}
+{% block content %}
+<div class="page-shell page-shell--narrow">
+
+  <div class="page-head reveal is-visible">
+    <a href="{{ url_for('household.dashboard', household_id=household.id) }}" class="notif-back-link">← Dashboard</a>
+    <p class="eyebrow">{{ household.name }}</p>
+    <h1>Balances</h1>
+    <div class="page-head__actions">
+      <a href="{{ url_for('settle.settle', household_id=household.id) }}" class="btn btn--primary">Settle up</a>
+      <a href="{{ url_for('expenses.list_expenses', household_id=household.id) }}" class="btn btn--ghost">All expenses</a>
+    </div>
+  </div>
+
+  {% if net_display %}
+  <div class="card reveal is-visible">
+    <p class="member-list__heading">NET BALANCES</p>
+    <p style="font-size:13px;color:rgba(11,27,58,0.55);margin-bottom:18px;">
+      Positive = you're owed money. Negative = you owe money.
+    </p>
+    {% for user, balance in net_display.items() | sort(attribute='1', reverse=True) %}
+    <div class="balance-row">
+      <span class="balance-row__name">{{ user.name }}{% if user.id == current_user.id %} <em>(you)</em>{% endif %}</span>
+      <span class="balance-row__amount {% if balance > 0 %}balance-row__amount--positive{% elif balance < 0 %}balance-row__amount--negative{% endif %}">
+        {% if balance > 0 %}+{% endif %}${{ "%.2f"|format(balance|abs) }}
+        <span class="balance-row__label">{{ 'owed' if balance > 0 else ('owes' if balance < 0 else 'settled') }}</span>
+      </span>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state reveal is-visible">
+    <p>All balances are settled. 🎉</p>
+    <a href="{{ url_for('expenses.new_expense', household_id=household.id) }}" class="btn btn--primary" style="margin-top:16px;">Add an expense</a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

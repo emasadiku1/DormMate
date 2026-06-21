@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block title %}Report Issue — {{ household.name }}{% endblock %}
+{% block content %}
+<div class="page-shell page-shell--narrow">
+
+  <div class="page-head reveal is-visible">
+    <a href="{{ url_for('issues.list_issues', household_id=household.id) }}" class="notif-back-link">← Maintenance</a>
+    <p class="eyebrow">{{ household.name }}</p>
+    <h1>Report an Issue</h1>
+  </div>
+
+  <div class="card reveal is-visible" style="padding:28px;">
+    <form method="POST">
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <input type="text" name="title" class="form-input" placeholder="e.g. Leaky faucet in bathroom" required autofocus>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description <span style="font-weight:400;color:rgba(11,27,58,0.4);">(optional)</span></label>
+        <textarea name="description" class="form-input" rows="4" placeholder="Extra details about the issue…" style="resize:vertical;"></textarea>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button type="submit" class="btn btn--primary">Report issue</button>
+        <a href="{{ url_for('issues.list_issues', household_id=household.id) }}" class="btn btn--ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}
